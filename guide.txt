@@ -1,0 +1,55 @@
+http://localhost:3000/admin/library
+http://localhost:3000/
+http://localhost:3000/admin/login
+
+ 
+
+1.Backend
+node ./scripts/seedSchools.js 
+.node scripts/seedAdmin.js
+.nodemon server.js
+----
+npm install
+
+2.frontend
+4.npm start
+http://localhost:3000/select-school
+
+admin page
+http://localhost:3000/admin/login 
+
+3.production
+a- render website
+
+https://render.com/
+
+
+4- github push there
+create new repository
+1- in your local machine do this:
+
+ 448  git remote -v
+  449  git add frontend/ backend/
+  450  git status
+  451  git commit -m "init production 2"
+  452  git remote set-url origin git@github.com:shirinmk/reading-log.git
+  453  git remote -v
+  454  git push -u origin main
+
+2- just paste 
+
+ git init
+>> git add README.md
+>> git commit -m "first commit"
+>> git branch -M main
+>> git remote add origin git@github.com:shirinmk/reading-log-oct2025.git
+>> git push -u origin main
+
+b- create web service
+c- create static web
+d- add enviorement variable and connect the routes
+
+
+
+----working on postman---
+when working locally need to download postman agent
