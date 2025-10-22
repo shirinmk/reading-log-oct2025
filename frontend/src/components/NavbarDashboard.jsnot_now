@@ -1,0 +1,41 @@
+// src/components/Navbar.js
+import React from "react";
+import { Link } from "react-router-dom";
+
+const NavbarDashboard = () => (
+<nav className="navbar navbar-expand-md bg-light border-top shadow-sm mt-5">
+    <div className="container justify-content-center">
+      <ul className="navbar-nav mb-2 mb-md-0 d-flex align-items-center">
+        {/* Nav links (centered) */}
+        <li className="nav-item mx-3">
+          <Link className="nav-link fw-semibold" to="/challenges">
+            Challenges
+          </Link>
+        </li>
+        <li className="nav-item mx-3">
+          <Link className="nav-link fw-semibold" to="/reviews">
+            Reviews
+          </Link>
+        </li>
+        <li className="nav-item mx-3">
+          <Link className="nav-link fw-semibold" to="/badges">
+            All Badges
+          </Link>
+        </li>
+        <li className="nav-item mx-3">
+          <Link className="nav-link fw-semibold" to="/reading-log">
+            Reading Log
+          </Link>
+        </li>
+        <li className="nav-item mx-3">
+          <Link className="nav-link fw-semibold" to="/recommendations">
+            Recommendations
+          </Link>
+        </li>
+      </ul>
+    </div>
+  </nav>
+);
+
+
+export default NavbarDashboard;
