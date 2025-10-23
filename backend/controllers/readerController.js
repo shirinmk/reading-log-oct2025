@@ -225,35 +225,18 @@ const getBadges = async (req, res) => {
 /**
  * Top readers (with optional school filter)
  */
-// const getTopReaders = async (req, res) => {
-//   try {
-//     const { schoolId } = req.query;
-//     const filter = schoolId ? { schoolId } : {};
-//     const readers = await Reader.find(filter)
-//       .sort({ pagesRead: -1 })
-//       .limit(10)
-//       .select("firstName lastName grade teacher pagesRead");
-//     res.json({ readers });
-//   } catch (err) {
-//     console.error("GET TOP READERS ERROR:", err);
-//     res.status(500).json({ message: "Failed to load top readers" });
-//   }
-// };
-exports.getTopReaders = async (req, res) => {
+const getTopReaders = async (req, res) => {
   try {
-    const schoolId = req.query.schoolId;
-    const filter = schoolId ? { school: schoolId } : {};
-
-    console.log("🎯 Fetching top readers for:", schoolId || "All Schools");
-
+    const { schoolId } = req.query;
+    const filter = schoolId ? { schoolId } : {};
     const readers = await Reader.find(filter)
       .sort({ pagesRead: -1 })
-      .limit(5);
-
+      .limit(10)
+      .select("firstName lastName grade teacher pagesRead");
     res.json({ readers });
   } catch (err) {
-    console.error("❌ getTopReaders error:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("GET TOP READERS ERROR:", err);
+    res.status(500).json({ message: "Failed to load top readers" });
   }
 };
 
