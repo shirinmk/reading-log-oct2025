@@ -570,6 +570,133 @@ useEffect(() => {
             </table>
           </div>
         )}
+{/* === Borrowed Books Tab === */}
+{/* {activeTab === "borrowed" && (
+  <div>
+    <h4 className="mt-4">Borrowed Books</h4>
+
+    {borrowed.length === 0 ? (
+      <div className="alert alert-secondary text-center mt-3">
+        No borrowed books found.
+      </div>
+    ) : (
+      <table className="table table-bordered mt-3">
+        <thead>
+          <tr>
+            <th>Book Title</th>
+            <th>Reader</th>
+            <th>Teacher</th>
+            <th>Grade</th>
+            <th>Borrowed Date</th>
+            <th>Due Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {borrowed.map((record) => (
+            <tr key={record._id}>
+              <td>{record.book?.title || "—"}</td>
+              <td>
+                {record.reader
+                  ? `${record.reader.firstName} ${record.reader.lastName}`
+                  : "—"}
+              </td>
+              <td>{record.reader?.teacher || "—"}</td>
+              <td>{record.reader?.grade || "—"}</td>
+              <td>{new Date(record.borrowedAt).toLocaleDateString()}</td>
+              <td>
+                {record.dueDate
+                  ? new Date(record.dueDate).toLocaleDateString()
+                  : "—"}
+              </td>
+              <td>
+                {record.status === "borrowed" ? (
+                  <button
+                    className="btn btn-sm btn-outline-success"
+                    onClick={() => handleReturnBook(record._id)}
+                  >
+                    Return
+                  </button>
+                ) : (
+                  <span className="text-success fw-semibold">Returned</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+)} */}
+{/* === Borrowed Books Tab === */}
+{activeTab === "borrowed" && (
+  <div>
+    <div className="d-flex justify-content-between align-items-center mb-3">
+      <h4>Borrowed Books</h4>
+      <button
+        className="btn btn-primary"
+        onClick={() => setShowBorrowModal(true)}
+      >
+        + Borrow Book
+      </button>
+    </div>
+
+    {borrowed.length === 0 ? (
+      <div className="alert alert-secondary text-center">
+        No borrowed books found.
+      </div>
+    ) : (
+      <table className="table table-striped table-bordered">
+        <thead className="table-light">
+          <tr>
+            <th>Book</th>
+            <th>Reader</th>
+            <th>Borrowed At</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {borrowed.map((record) => (
+            <tr key={record._id}>
+              <td>{record.book?.title || "—"}</td>
+              <td>
+                {record.reader
+                  ? `${record.reader.firstName} ${record.reader.lastName}`
+                  : "—"}
+              </td>
+              <td>{new Date(record.borrowedAt).toLocaleDateString()}</td>
+              <td>
+                {record.dueDate
+                  ? new Date(record.dueDate).toLocaleDateString()
+                  : "—"}
+              </td>
+              <td>
+                {record.status === "borrowed" ? (
+                  <span className="badge bg-warning text-dark">Borrowed</span>
+                ) : (
+                  <span className="badge bg-success">Returned</span>
+                )}
+              </td>
+              <td>
+                {record.status === "borrowed" && (
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => handleReturnBook(record._id)}
+                  >
+                    Return
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+)}
+
 
         {/* === Add Book Modal === */}
         {showAddModal && (
@@ -661,6 +788,89 @@ useEffect(() => {
             </div>
           </div>
         )}
+        {/* === Borrow Book Modal === */}
+{showBorrowModal && (
+  <div className="modal fade show d-block" tabIndex="-1">
+    <div className="modal-dialog">
+      <div className="modal-content">
+        <form onSubmit={handleBorrowBook}>
+          <div className="modal-header">
+            <h5 className="modal-title">Borrow a Book</h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setShowBorrowModal(false)}
+            ></button>
+          </div>
+          <div className="modal-body">
+            <div className="mb-3">
+              <label className="form-label fw-bold">Select Book</label>
+              <select
+                className="form-select"
+                value={borrowData.bookId}
+                onChange={(e) =>
+                  setBorrowData({ ...borrowData, bookId: e.target.value })
+                }
+                required
+              >
+                <option value="">-- Choose a Book --</option>
+                {books.map((book) => (
+                  <option key={book._id} value={book._id}>
+                    {book.title} ({book.availableCopies} available)
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label fw-bold">Select Reader</label>
+              <select
+                className="form-select"
+                value={selectedReaderId}
+                onChange={(e) => setSelectedReaderId(e.target.value)}
+                required
+              >
+                <option value="">-- Choose Reader --</option>
+                {readers.map((r) => (
+                  <option key={r._id} value={r._id}>
+                    {r.firstName} {r.lastName} ({r.grade || "?"})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-3">
+              <label className="form-label fw-bold">Due Date</label>
+              <input
+                type="date"
+                className="form-control"
+                value={borrowData.dueDate}
+                onChange={(e) =>
+                  setBorrowData({ ...borrowData, dueDate: e.target.value })
+                }
+                required
+              />
+            </div>
+          </div>
+
+          <div className="modal-footer">
+            <button type="submit" className="btn btn-success">
+              Borrow
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setShowBorrowModal(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+)}
+
       </div>
     </>
   );

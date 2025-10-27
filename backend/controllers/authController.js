@@ -119,6 +119,76 @@ const register = async (req, res) => {
 /**
  * Login (email OR username + password)
  */
+// const login = async (req, res) => {
+//   try {
+//     const { emailOrUsername, password } = req.body || {};
+//     if (!emailOrUsername || !password) {
+//       return res.status(400).json({ message: "Email/Username and password are required" });
+//     }
+
+//     // const user = await User.findOne({
+//     //   $or: [{ email: emailOrUsername.toLowerCase() }, { username: emailOrUsername }],
+//     // });
+//     // if (!user) return res.status(400).json({ message: "User not found" });
+
+//     // if (user.role !== "admin" && !user.isVerified) {
+//     //   return res.status(403).json({ message: "Please verify your email before logging in" });
+//     // }
+//    // inside login function
+// const user = await User.findOne({
+//   $or: [{ email: emailOrUsername.toLowerCase() }, { username: emailOrUsername }],
+// }).populate("schoolId");
+
+// if (!user) return res.status(400).json({ message: "User not found" });
+
+// // ✅ check if admin belongs to that school
+// if (user.role === "admin") {
+//   const school = await School.findById(user.schoolId);
+//   if (!school || !school.adminEmails.includes(user.email.toLowerCase())) {
+//     return res.status(403).json({ message: "You are not authorized as admin for this school" });
+//   }
+// }
+ 
+
+//     const isMatch = await bcrypt.compare(password, user.password);
+//     if (!isMatch) return res.status(400).json({ message: "Invalid password" });
+
+//     // const token = jwt.sign(
+//     //   { id: user._id, role: user.role, schoolId: user.schoolId },
+//     //   process.env.JWT_SECRET,
+//     //   { expiresIn: "7d" }
+//     // );
+//     const token = jwt.sign(
+//   {
+//     id: user._id,
+//     role: user.role,
+//     // schoolId: user.schoolId ? user.schoolId._id || user.schoolId : null,  // ✅ force to plain ObjectId
+//     schoolId: user.schoolId?._id ? user.schoolId._id : user.schoolId,  // ✅ only the ObjectId
+//   },
+//   process.env.JWT_SECRET,
+//   { expiresIn: "7d" }
+// );
+
+
+//     return res.json({
+//       message: "Login successful",
+//       token,
+//       user: {
+//         id: user._id,
+//         firstName: user.firstName,
+//         lastName: user.lastName,
+//         username: user.username,
+//         email: user.email,
+//         phone: user.phone,
+//         role: user.role,
+//         schoolId: user.schoolId,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("LOGIN ERROR:", err);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
 const login = async (req, res) => {
   try {
     const { emailOrUsername, password } = req.body || {};
@@ -126,50 +196,41 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Email/Username and password are required" });
     }
 
-    // const user = await User.findOne({
-    //   $or: [{ email: emailOrUsername.toLowerCase() }, { username: emailOrUsername }],
-    // });
-    // if (!user) return res.status(400).json({ message: "User not found" });
+    const user = await User.findOne({
+      $or: [{ email: emailOrUsername.toLowerCase() }, { username: emailOrUsername }],
+    }).populate("schoolId");
 
-    // if (user.role !== "admin" && !user.isVerified) {
-    //   return res.status(403).json({ message: "Please verify your email before logging in" });
-    // }
-   // inside login function
-const user = await User.findOne({
-  $or: [{ email: emailOrUsername.toLowerCase() }, { username: emailOrUsername }],
-}).populate("schoolId");
+    if (!user) return res.status(400).json({ message: "User not found" });
 
-if (!user) return res.status(400).json({ message: "User not found" });
+    // ✅ Admin validation
+    if (user.role === "admin") {
+      const school = await School.findById(user.schoolId);
+      if (!school || !school.adminEmails.includes(user.email.toLowerCase())) {
+        return res.status(403).json({ message: "You are not authorized as admin for this school" });
+      }
+    }
 
-// ✅ check if admin belongs to that school
-if (user.role === "admin") {
-  const school = await School.findById(user.schoolId);
-  if (!school || !school.adminEmails.includes(user.email.toLowerCase())) {
-    return res.status(403).json({ message: "You are not authorized as admin for this school" });
-  }
-}
- 
-
+    // ✅ Password check
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid password" });
 
-    // const token = jwt.sign(
-    //   { id: user._id, role: user.role, schoolId: user.schoolId },
-    //   process.env.JWT_SECRET,
-    //   { expiresIn: "7d" }
-    // );
+    // ✅ Ensure verified parent
+    if (user.role === "parent" && !user.isVerified) {
+      return res.status(403).json({ message: "Please verify your email before logging in" });
+    }
+
+    // ✅ Generate token (normalized keys)
     const token = jwt.sign(
-  {
-    id: user._id,
-    role: user.role,
-    // schoolId: user.schoolId ? user.schoolId._id || user.schoolId : null,  // ✅ force to plain ObjectId
-    schoolId: user.schoolId?._id ? user.schoolId._id : user.schoolId,  // ✅ only the ObjectId
-  },
-  process.env.JWT_SECRET,
-  { expiresIn: "7d" }
-);
+      {
+        userId: user._id, // standardize
+        role: user.role,
+        schoolId: user.schoolId?._id ? user.schoolId._id : user.schoolId,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-
+    // ✅ Return user and school info
     return res.json({
       message: "Login successful",
       token,
@@ -181,7 +242,8 @@ if (user.role === "admin") {
         email: user.email,
         phone: user.phone,
         role: user.role,
-        schoolId: user.schoolId,
+        schoolId: user.schoolId?._id || user.schoolId,
+        schoolName: user.schoolId?.name,
       },
     });
   } catch (err) {

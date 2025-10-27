@@ -1,13 +1,28 @@
+// const mongoose = require("mongoose");
+
+// const borrowRecordSchema = new mongoose.Schema({
+//   book: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true },
+//   reader: { type: mongoose.Schema.Types.ObjectId, ref: "Reader", required: true },
+//   borrowedAt: { type: Date, default: Date.now },
+//   dueDate: { type: Date },
+//   returnedAt: { type: Date },
+//   status: { type: String, enum: ["borrowed", "returned"], default: "borrowed" },
+//   schoolId: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true } // ✅ added
+// });
+
+// module.exports = mongoose.model("BorrowRecord", borrowRecordSchema);
+
+
 const mongoose = require("mongoose");
 
-const borrowRecordSchema = new mongoose.Schema({
-  book: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true },
+const BorrowRecordSchema = new mongoose.Schema({
   reader: { type: mongoose.Schema.Types.ObjectId, ref: "Reader", required: true },
+  book: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true },
+  schoolId: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true },
   borrowedAt: { type: Date, default: Date.now },
-  dueDate: { type: Date },
   returnedAt: { type: Date },
+  dueDate: { type: Date },
   status: { type: String, enum: ["borrowed", "returned"], default: "borrowed" },
-  schoolId: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true } // ✅ added
 });
 
-module.exports = mongoose.model("BorrowRecord", borrowRecordSchema);
+module.exports = mongoose.model("BorrowRecord", BorrowRecordSchema);
