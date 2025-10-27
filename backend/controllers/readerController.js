@@ -417,6 +417,34 @@ const adminAddReader = async (req, res) => {
   }
 };
 
+const BorrowRecord = require("../models/BorrowRecord"); // <-- add this at the top
+
+// ✅ Get borrowed books for a specific reader
+const getBorrowedBooksForReader = async (req, res) => {
+  try {
+    const { id } = req.params; // reader ID
+    const schoolObjectId = getSchoolObjectId(req);
+
+    if (!schoolObjectId) {
+      return res.status(400).json({ message: "Invalid schoolId" });
+    }
+
+    const borrowed = await BorrowRecord.find({
+      reader: id,
+      schoolId: schoolObjectId,
+      status: "borrowed",
+    })
+      .populate("book", "title author barcode")
+      .sort({ borrowedAt: -1 });
+
+    res.json({ borrowed });
+  } catch (err) {
+    console.error("GET BORROWED BOOKS FOR READER ERROR:", err);
+    res.status(500).json({ message: "Server error loading borrowed books" });
+  }
+};
+
+
 module.exports = {
   addReader,
   getReaders,
@@ -432,4 +460,5 @@ module.exports = {
   getGrades,
   getAllReaders,
   adminAddReader,
+  getBorrowedBooksForReader, // ✅ add this
 };

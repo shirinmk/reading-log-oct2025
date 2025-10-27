@@ -15,17 +15,31 @@ const LogReadingModal = ({ reader, onClose, onLogSuccess }) => {
   });
 
   // 🔹 Load borrowed books for this reader
-  useEffect(() => {
-    const fetchBorrowed = async () => {
-      try {
-        const res = await api.get(`/borrow/${reader._id}`);
-        setBorrowedBooks(res.data || []);
-      } catch (err) {
-        console.error("Error loading borrowed books:", err);
-      }
-    };
-    if (reader?._id) fetchBorrowed();
-  }, [reader]);
+  // useEffect(() => {
+  //   const fetchBorrowed = async () => {
+  //     try {
+  //       const res = await api.get(`/borrow/${reader._id}`);
+  //       setBorrowedBooks(res.data || []);
+  //     } catch (err) {
+  //       console.error("Error loading borrowed books:", err);
+  //     }
+  //   };
+  //   if (reader?._id) fetchBorrowed();
+  // }, [reader]);
+// 🔹 Load borrowed books for this reader
+useEffect(() => {
+  const fetchBorrowed = async () => {
+    try {
+      const res = await api.get(`/readers/${reader._id}/borrowed`);
+      setBorrowedBooks(res.data.borrowed || []);
+      console.log("📚 Borrowed books:", res.data.borrowed);
+    } catch (err) {
+      console.error("Error loading borrowed books:", err);
+      setBorrowedBooks([]);
+    }
+  };
+  if (reader?._id) fetchBorrowed();
+}, [reader]);
 
   // 🔹 Submit log
   const handleSubmit = async (e) => {
@@ -91,7 +105,7 @@ const LogReadingModal = ({ reader, onClose, onLogSuccess }) => {
 
               {mode === "borrowed" ? (
                 <>
-                  <select
+                  {/* <select
                     className="form-select mb-3"
                     value={selectedBorrowedBook}
                     onChange={(e) => setSelectedBorrowedBook(e.target.value)}
@@ -104,7 +118,22 @@ const LogReadingModal = ({ reader, onClose, onLogSuccess }) => {
                         {record.book?.author ? `(${record.book.author})` : ""}
                       </option>
                     ))}
-                  </select>
+                  </select> */}
+                  <select
+  className="form-select mb-3"
+  value={selectedBorrowedBook}
+  onChange={(e) => setSelectedBorrowedBook(e.target.value)}
+  required
+>
+  <option value="">-- Select Borrowed Book --</option>
+  {borrowedBooks.map((record) => (
+    <option key={record._id} value={record.book?._id}>
+      {record.book?.title || "Untitled"}{" "}
+      {record.book?.author ? `(${record.book.author})` : ""}
+    </option>
+  ))}
+</select>
+
 
                   <input
                     type="number"
