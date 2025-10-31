@@ -14,8 +14,7 @@ const {
   deleteBook,
   getBadges,
   getTeachers,
-  getGrades,
-  getBorrowedBooksForReader,
+  getGrades
 } = require("../controllers/readerController");  // ✅ make sure all exist
 console.log({ addReader, adminAddReader, logReading });
 
@@ -57,9 +56,12 @@ router.delete("/:id", authMiddleware, deleteReader);
 router.post("/:id/books", authMiddleware, logReading);
 router.put("/:readerId/books/:bookId", authMiddleware, updateBook);
 router.delete("/:readerId/books/:bookId", authMiddleware, deleteBook);
-router.get("/:id/borrowed", authMiddleware, getBorrowedBooksForReader);
-
 
 router.get("/:id/badges", authMiddleware, getBadges);
+
+// showing borrowed book in reader
+const { getBorrowedBooksForReader } = require("../controllers/readerController");
+
+router.get("/:id/borrowed", authMiddleware, getBorrowedBooksForReader);
 
 module.exports = router;

@@ -5,13 +5,13 @@ import LogReadingModal from "../components/LogReadingModal";
 import EditBookModal from "../components/EditBookModal";
 import EditReaderModal from "../components/EditReaderModal";
 import api from "../utils/axios";
+import { exportToExcel } from "../utils/exportExcel";
 
 const Dashboard = () => {
   const [message, setMessage] = useState("");
   const [readers, setReaders] = useState([]);
   const [currentReader, setCurrentReader] = useState(null);
-
-  const [borrowedBooks, setBorrowedBooks] = useState([]); // ✅
+  const [borrowedBooks, setBorrowedBooks] = useState([]);
   const [showLogModal, setShowLogModal] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [editReaderId, setEditReaderId] = useState(null);
@@ -20,7 +20,7 @@ const Dashboard = () => {
   const [searchParams] = useSearchParams();
   const ridFromUrl = searchParams.get("rid");
 
-  // Dashboard banner
+  // ✅ Load dashboard welcome message
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
@@ -34,7 +34,7 @@ const Dashboard = () => {
     fetchDashboard();
   }, []);
 
-  // Readers
+  // ✅ Load readers
   useEffect(() => {
     const fetchReaders = async () => {
       try {
@@ -48,39 +48,29 @@ const Dashboard = () => {
     fetchReaders();
   }, []);
 
-  // Auto-select reader if ?rid param exists
+  // ✅ Auto-select reader from ?rid param
   useEffect(() => {
     if (!readers.length || !ridFromUrl) return;
     const match = readers.find((r) => r._id === ridFromUrl);
     if (match) setCurrentReader(match);
   }, [readers, ridFromUrl]);
 
-  // Fetch borrowed books when currentReader changes
+  // ✅ Fetch borrowed books when reader changes
   useEffect(() => {
     if (!currentReader?._id) return;
-
-    // const fetchBorrowed = async () => {
-    //   try {
-    //     const { data } = await api.get(`/borrow/reader/${currentReader._id}`);
-    //     setBorrowedBooks(data);
-    //   } catch (err) {
-    //     console.error("Error fetching borrowed books:", err);
-    //     setBorrowedBooks([]);
-    //   }
-    // };
-const fetchBorrowed = async () => {
-  try {
-    const { data } = await api.get(`/borrow/${currentReader._id}`);
-    setBorrowedBooks(data);
-  } catch (err) {
-    console.error("Error fetching borrowed books:", err);
-    setBorrowedBooks([]);
-  }
-};
-
+    const fetchBorrowed = async () => {
+      try {
+        const { data } = await api.get(`/borrow/${currentReader._id}`);
+        setBorrowedBooks(data);
+      } catch (err) {
+        console.error("Error fetching borrowed books:", err);
+        setBorrowedBooks([]);
+      }
+    };
     fetchBorrowed();
   }, [currentReader]);
 
+  // ✅ Reader added
   const handleReaderAdded = (newReader) => {
     if (newReader) {
       setReaders((prev) => [...prev, newReader]);
@@ -88,6 +78,7 @@ const fetchBorrowed = async () => {
     }
   };
 
+  // ✅ After logging reading
   const handleLogSuccess = (updatedReader) => {
     setReaders((prev) =>
       prev.map((r) => (r._id === updatedReader._id ? updatedReader : r))
@@ -95,11 +86,13 @@ const fetchBorrowed = async () => {
     setCurrentReader(updatedReader);
   };
 
+  // ✅ Open edit book modal
   const openEditBook = (book) => {
     if (!currentReader) return;
     setEditTarget({ readerId: currentReader._id, book });
   };
 
+  // ✅ Delete book
   const handleDeleteBook = async (book) => {
     if (!currentReader) return;
     const ok = window.confirm(`Delete "${book.title}"?`);
@@ -116,6 +109,31 @@ const fetchBorrowed = async () => {
     } catch (e) {
       alert(e.response?.data?.message || "Failed to delete book");
     }
+  };
+
+  // ✅ Export reader’s books to Excel
+  const handleExportParent = () => {
+    if (!currentReader?.books || currentReader.books.length === 0) {
+      alert("No reading records to export.");
+      return;
+    }
+
+    const data = currentReader.books.map((b) => ({
+      Title: b.title,
+      Author: b.author,
+      Pages: b.pages,
+      Summary: b.summary || "",
+      Completed: b.completedAt
+        ? new Date(b.completedAt).toLocaleDateString()
+        : "",
+      LoggedAt: b.createdAt ? new Date(b.createdAt).toLocaleDateString() : "",
+      Updated: b.updatedAt ? new Date(b.updatedAt).toLocaleDateString() : "",
+    }));
+
+    exportToExcel(
+      data,
+      `${currentReader.firstName}_${currentReader.lastName}_ReadingLog`
+    );
   };
 
   return (
@@ -141,25 +159,59 @@ const fetchBorrowed = async () => {
 
         {currentReader ? (
           <div className="card p-3 mt-3 shadow-sm">
-            {/* Header */}
-            <div className="d-flex justify-content-between align-items-center flex-wrap">
+            {/* Header Section */}
+            <div
+              className="d-flex justify-content-between align-items-start flex-wrap gap-2"
+              style={{
+                paddingBottom: "10px",
+                borderBottom: "2px solid #f3c791",
+                marginBottom: "10px",
+              }}
+            >
               <h4 className="m-0">Reader Information</h4>
-              <div className="d-flex flex-column flex-md-row gap-2 mt-2 mt-md-0">
+
+              {/* Action Buttons */}
+              <div
+                className="d-flex flex-wrap justify-content-end gap-2"
+                style={{
+                  backgroundColor: "#fffaf3",
+                  borderRadius: "8px",
+                  padding: "8px 10px",
+                  flexGrow: 1,
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  type="button"
+                  className="btn btn-success btn-sm"
+                  onClick={handleExportParent}
+                  style={{
+                    fontWeight: "bold",
+                    color: "white",
+                    backgroundColor: "#28a745",
+                    borderColor: "#28a745",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  📤 Export Excel
+                </button>
+
                 <Link
                   to={`/readers/${currentReader._id}/badges`}
                   state={{ from: "dashboard" }}
-                  className="btn btn-outline-primary btn-sm"
+                  className="btn btn-warning btn-sm"
                   style={{
+                    fontWeight: "bold",
                     backgroundColor: "#f3c791ff",
                     color: "black",
-                    fontWeight: "bold",
+                    border: "1px solid #d4aa52",
                   }}
                 >
                   View {currentReader.firstName}'s Badges
                 </Link>
 
                 <button
-                  className="btn btn-sm btn-outline-secondary"
+                  className="btn btn-outline-secondary btn-sm"
                   onClick={() => setEditReaderId(currentReader._id)}
                 >
                   Edit Reader
@@ -171,6 +223,7 @@ const fetchBorrowed = async () => {
                     backgroundColor: "#f3c791ff",
                     color: "black",
                     fontWeight: "bold",
+                    border: "1px solid #d4aa52",
                   }}
                   onClick={() => setShowLogModal(true)}
                 >
@@ -179,7 +232,7 @@ const fetchBorrowed = async () => {
               </div>
             </div>
 
-            {/* Info table */}
+            {/* Info Table */}
             <table className="table table-bordered mt-2">
               <tbody>
                 <tr style={{ backgroundColor: "#ffe0f0" }}>
@@ -227,7 +280,7 @@ const fetchBorrowed = async () => {
               </tbody>
             </table>
 
-            {/* Books */}
+            {/* Books Table */}
             <h4 className="mt-4">Books</h4>
             {currentReader.books?.length > 0 ? (
               <div className="table-responsive">
@@ -296,17 +349,16 @@ const fetchBorrowed = async () => {
         )}
       </div>
 
-      {/* Log Reading Modal */}
+      {/* Modals */}
       {showLogModal && currentReader && (
         <LogReadingModal
           reader={currentReader}
-          borrowedBooks={borrowedBooks}   // ✅ send borrowed books
+          borrowedBooks={borrowedBooks}
           onClose={() => setShowLogModal(false)}
           onLogSuccess={handleLogSuccess}
         />
       )}
 
-      {/* Edit Book Modal */}
       {editTarget && (
         <EditBookModal
           readerId={editTarget.readerId}
@@ -322,7 +374,6 @@ const fetchBorrowed = async () => {
         />
       )}
 
-      {/* Edit Reader Modal */}
       {editReaderId && (
         <EditReaderModal
           readerId={editReaderId}
